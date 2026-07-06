@@ -997,20 +997,30 @@ def get_qr_code(outlet_id):
     base_url = request.host_url.rstrip('/')
     qr_url = f"{base_url}/api/inventory?outlet_id={outlet_id}"
     
-    # Generate QR code image
-    qr = qrcode.QRCode(version=1, box_size=10, border=4)
+    # Use qrcode library without PIL dependency
+    import io
+    import qrcode as qr_module
+    
+    qr = qr_module.QRCode(version=1, box_size=10, border=4)
     qr.add_data(qr_url)
     qr.make(fit=True)
     
+    # Create image using the qrcode's built-in method
     img = qr.make_image(fill_color="black", back_color="white")
-    buffer = BytesIO()
-    img.save(buffer, format="PNG")
-    img_b64 = b64.b64encode(buffer.getvalue()).decode()
+    
+    # Save to BytesIO
+    img_buffer = io.BytesIO()
+    img.save(img_buffer, format='PNG')
+    img_buffer.seek(0)
+    
+    import base64
+    img_b64 = base64.b64encode(img_buffer.getvalue()).decode()
     
     return jsonify({
         'qrCode': f"data:image/png;base64,{img_b64}",
         'url': qr_url
     })
+
 
 @app.route('/api/seed', methods=['POST'])
 @login_required
