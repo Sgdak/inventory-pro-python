@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Inventory Pro</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 400px; margin: 50px auto; padding: 20px; }
+        input { display: block; width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px; }
+        button { padding: 10px 20px; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #1d4ed8; }
+        #appShell { display: none; padding: 20px; background: #f0fdf4; border: 2px solid #16a34a; border-radius: 8px; margin-top: 20px; }
+        .error { color: #dc2626; margin-top: 10px; }
+        .success { color: #16a34a; }
+        h1 { color: #1e293b; }
+    </style>
+</head>
+<body>
+    <h1>📦 Inventory Pro</h1>
+    <div id="loginForm">
+        <h2>Login</h2>
+        <input type="text" id="username" placeholder="Username" value="admin">
+        <input type="password" id="password" placeholder="Password" value="admin123">
+        <button onclick="login()">Login</button>
+        <div id="loginError" class="error"></div>
+    </div>
+    <div id="appShell">
+        <h2>✅ Welcome to Inventory Pro!</h2>
+        <p>You are logged in successfully.</p>
+        <p>The full frontend will be displayed here.</p>
+        <button onclick="logout()" style="background:#dc2626;">Logout</button>
+    </div>
+
+    <script>
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorEl = document.getElementById('loginError');
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('loginForm').style.display = 'none';
+                    document.getElementById('appShell').style.display = 'block';
+                    errorEl.textContent = '';
+                } else {
+                    errorEl.textContent = data.error || 'Login failed';
+                }
+            } catch (error) {
+                errorEl.textContent = 'Network error - is the server running?';
+            }
+        }
+
+        async function logout() {
+            await fetch('/api/auth/logout', { method: 'POST' });
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('appShell').style.display = 'none';
+        }
+
+        // Check if already logged in
+        async function checkAuth() {
+            try {
+                const response = await fetch('/api/auth/me');
+                if (response.ok) {
+                    document.getElementById('loginForm').style.display = 'none';
+                    document.getElementById('appShell').style.display = 'block';
+                }
+            } catch (error) {
+                // Not logged in
+            }
+        }
+        checkAuth();
+    </script>
+</body>
+</html>
